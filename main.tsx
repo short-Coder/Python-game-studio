@@ -46,10 +46,11 @@ async function runProject(py: any, m: Msg, post: (t: string, d: string) => void,
     'if pend: await asyncio.gather(*pend)',
   ].join('\n'));
 }
-const workerSrc = "importScripts('" + PYO + "pyodide.js');\n" + runProject.toString() +
+const runProjectSrc = "const runProject = " + runProject.toString() + ";";
+const workerSrc = "importScripts('" + PYO + "pyodide.js');\n" + runProjectSrc +
   "\nlet py;\nonmessage = async (ev) => { const post = (t, d) => postMessage({ t, d }); try { if (!py) { post('out', '[loading Python runtime, first run takes a while...]'); py = await loadPyodide(); } await runProject(py, ev.data, post); post('done', ''); } catch (e) { post('err', String((e && e.message) || e)); } };";
 const gameDoc = (m: Msg) => '<!doctype html><body style="margin:0;background:#000"><canvas id="canvas" tabindex="1" style="width:100%;touch-action:none;outline:none" oncontextmenu="return false"></canvas>' +
-  '<script src="' + PYO + 'pyodide.js"></scr' + 'ipt><script>' + runProject.toString() +
+  '<script src="' + PYO + 'pyodide.js"></scr' + 'ipt><script>' + runProjectSrc +
   ';(async()=>{const post=(t,d)=>parent.postMessage({t,d},"*");const m=' + JSON.stringify(m).replace(/</g, '\\u003c') +
   ';try{post("out","[loading Python + pygame, first run takes a while...]");const py=await loadPyodide();const c=document.getElementById("canvas");c.focus();await runProject(py,m,post,c);post("done","");}catch(e){post("err",String((e&&e.message)||e));}})();</scr' + 'ipt></body>';
 
